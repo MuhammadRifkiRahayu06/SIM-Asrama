@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIM-ASRAMA | Manajemen Data, Perizinan &amp; Poin Santri</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Bagian Header / Navigasi Atas -->
+    <header class="navbar">
+        <div class="container navbar-isi">
+            <div class="brand">
+                <h1>SIM-ASRAMA</h1>
+                <p>Sistem Informasi Manajemen Data, Perizinan &amp; Poin Santri</p>
+            </div>
+            <div class="navbar-kanan">
+                <span id="jam-sekarang" class="badge-waktu">Memuat waktu...</span>
+                <button type="button" id="btn-reset-data" class="btn btn-outline" title="Kembalikan data contoh awal">
+                    Reset Data
+                </button>
+                <button type="button" id="btn-tema" class="btn btn-outline" title="Ubah warna tema">
+                    Mode Gelap
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Kartu Ringkasan Statistik (Diperbarui Otomatis via DOM) -->
+        <section class="grid-statistik">
+            <div class="kartu-stat">
+                <span class="stat-label">Total Santri</span>
+                <h2 class="stat-angka" id="stat-total">0</h2>
+                <small class="stat-ket">Terdaftar di asrama</small>
+            </div>
+            <div class="kartu-stat stat-hijau">
+                <span class="stat-label">Di Asrama</span>
+                <h2 class="stat-angka" id="stat-asrama">0</h2>
+                <small class="stat-ket">Berada di lingkungan pondok</small>
+            </div>
+            <div class="kartu-stat stat-kuning">
+                <span class="stat-label">Sedang Izin</span>
+                <h2 class="stat-angka" id="stat-izin">0</h2>
+                <small class="stat-ket">Izin keluar / pulang / sakit</small>
+            </div>
+            <div class="kartu-stat stat-merah">
+                <span class="stat-label">Perlu Pembinaan</span>
+                <h2 class="stat-angka" id="stat-pembinaan">0</h2>
+                <small class="stat-ket">Skor poin di bawah 75</small>
+            </div>
+        </section>
+
+        <!-- Menu Tab Navigasi (Pindah Tampilan Tanpa Reload Halaman) -->
+        <nav class="tab-menu" role="tablist">
+            <button type="button" class="tab-btn active" data-tab="tab-santri">Data Santri</button>
+            <button type="button" class="tab-btn" data-tab="tab-perizinan">Log Perizinan</button>
+            <button type="button" class="tab-btn" data-tab="tab-poin">Catatan Poin</button>
+        </nav>
+
+        <!-- PANEL 1: DATA SANTRI -->
+        <section id="tab-santri" class="panel-tab active">
+            <div class="toolbar">
+                <div class="grup-filter">
+                    <input type="text" id="cari-santri" class="input-kontrol" placeholder="Cari nama atau NIS santri...">
+                    <select id="filter-kamar" class="input-kontrol">
+                        <option value="semua">Semua Kamar</option>
+                    </select>
+                    <select id="filter-status" class="input-kontrol">
+                        <option value="semua">Semua Status</option>
+                        <option value="Di Asrama">Di Asrama</option>
+                        <option value="Sedang Izin">Sedang Izin</option>
+                    </select>
+                </div>
+                <button type="button" id="btn-buka-modal-santri" class="btn btn-utama">+ Tambah Santri</button>
+            </div>
+
+            <div class="pembungkus-tabel">
+                <table class="tabel-data">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>NIS</th>
+                            <th>Nama Santri</th>
+                            <th>Kamar / Kobong</th>
+                            <th>Kelas</th>
+                            <th>Status</th>
+                            <th>Poin</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-santri"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PANEL 2: LOG PERIZINAN -->
+        <section id="tab-perizinan" class="panel-tab">
+            <div class="toolbar">
+                <div class="grup-filter">
+                    <input type="text" id="cari-izin" class="input-kontrol" placeholder="Cari nama santri atau keperluan...">
+                    <select id="filter-status-izin" class="input-kontrol">
+                        <option value="semua">Semua Status Izin</option>
+                        <option value="Aktif">Masih di Luar (Aktif)</option>
+                        <option value="Kembali">Sudah Kembali</option>
+                    </select>
+                </div>
+                <button type="button" id="btn-buka-modal-izin" class="btn btn-utama">+ Catat Izin Baru</button>
+            </div>
+
+            <div class="pembungkus-tabel">
+                <table class="tabel-data">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama Santri</th>
+                            <th>Jenis Izin</th>
+                            <th>Keperluan</th>
+                            <th>Waktu Keluar</th>
+                            <th>Estimasi Kembali</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-izin"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PANEL 3: CATATAN POIN KEDISIPLINAN & PRESTASI -->
+        <section id="tab-poin" class="panel-tab">
+            <div class="toolbar">
+                <div class="grup-filter">
+                    <input type="text" id="cari-poin" class="input-kontrol" placeholder="Cari nama santri atau keterangan...">
+                    <select id="filter-kategori-poin" class="input-kontrol">
+                        <option value="semua">Semua Kategori</option>
+                        <option value="Pelanggaran">Pelanggaran (-)</option>
+                        <option value="Prestasi">Prestasi (+)</option>
+                    </select>
+                </div>
+                <button type="button" id="btn-buka-modal-poin" class="btn btn-utama">+ Input Catatan Poin</button>
+            </div>
+
+            <div class="pembungkus-tabel">
+                <table class="tabel-data">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Tanggal</th>
+                            <th>Nama Santri</th>
+                            <th>Kategori</th>
+                            <th>Keterangan</th>
+                            <th>Perubahan Poin</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-poin"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL 1: FORM TAMBAH / EDIT SANTRI -->
+    <div id="modal-santri" class="modal-latar">
+        <div class="modal-kotak">
+            <div class="modal-header">
+                <h3 id="judul-modal-santri">Tambah Data Santri</h3>
+                <button type="button" class="btn-tutup-modal" data-tutup="modal-santri">&times;</button>
+            </div>
+            <form id="form-santri">
+                <input type="hidden" id="santri-id">
+                <div class="grup-form">
+                    <label for="santri-nis">Nomor Induk Santri (NIS)</label>
+                    <input type="text" id="santri-nis" class="input-kontrol" placeholder="Contoh: 2026005" required>
+                </div>
+                <div class="grup-form">
+                    <label for="santri-nama">Nama Lengkap Santri</label>
+                    <input type="text" id="santri-nama" class="input-kontrol" placeholder="Masukkan nama lengkap" required>
+                </div>
+                <div class="grup-form">
+                    <label for="santri-kamar">Kamar / Kobong</label>
+                    <input type="text" id="santri-kamar" class="input-kontrol" placeholder="Contoh: Al-Farabi 01" required>
+                </div>
+                <div class="grup-form">
+                    <label for="santri-kelas">Kelas</label>
+                    <input type="text" id="santri-kelas" class="input-kontrol" placeholder="Contoh: 7A" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" data-tutup="modal-santri">Batal</button>
+                    <button type="submit" class="btn btn-utama">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: FORM PERIZINAN BARU -->
+    <div id="modal-izin" class="modal-latar">
+        <div class="modal-kotak">
+            <div class="modal-header">
+                <h3>Catat Perizinan Santri</h3>
+                <button type="button" class="btn-tutup-modal" data-tutup="modal-izin">&times;</button>
+            </div>
+            <form id="form-izin">
+                <div class="grup-form">
+                    <label for="izin-id-santri">Pilih Santri</label>
+                    <select id="izin-id-santri" class="input-kontrol" required>
+                        <option value="">-- Pilih Santri --</option>
+                    </select>
+                </div>
+                <div class="grup-form">
+                    <label for="izin-jenis">Jenis Izin</label>
+                    <select id="izin-jenis" class="input-kontrol" required>
+                        <option value="Izin Keluar">Izin Keluar Sementara</option>
+                        <option value="Izin Pulang">Izin Pulang ke Rumah</option>
+                        <option value="Sakit">Sakit / Periksa Kesehatan</option>
+                    </select>
+                </div>
+                <div class="grup-form">
+                    <label for="izin-keperluan">Keperluan / Alasan Izin</label>
+                    <textarea id="izin-keperluan" class="input-kontrol" rows="3" placeholder="Tuliskan alasan izin secara jelas..." required></textarea>
+                </div>
+                <div class="grup-form">
+                    <label for="izin-estimasi">Estimasi Waktu Kembali</label>
+                    <input type="datetime-local" id="izin-estimasi" class="input-kontrol" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" data-tutup="modal-izin">Batal</button>
+                    <button type="submit" class="btn btn-utama">Simpan Izin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: FORM INPUT POIN -->
+    <div id="modal-poin" class="modal-latar">
+        <div class="modal-kotak">
+            <div class="modal-header">
+                <h3>Input Poin Kedisiplinan / Prestasi</h3>
+                <button type="button" class="btn-tutup-modal" data-tutup="modal-poin">&times;</button>
+            </div>
+            <form id="form-poin">
+                <div class="grup-form">
+                    <label for="poin-id-santri">Pilih Santri</label>
+                    <select id="poin-id-santri" class="input-kontrol" required>
+                        <option value="">-- Pilih Santri --</option>
+                    </select>
+                </div>
+                <div class="grup-form">
+                    <label for="poin-kategori">Kategori Catatan</label>
+                    <select id="poin-kategori" class="input-kontrol" required>
+                        <option value="Pelanggaran">Pelanggaran (Mengurangi Poin)</option>
+                        <option value="Prestasi">Prestasi (Menambah Poin)</option>
+                    </select>
+                </div>
+                <div class="grup-form">
+                    <label for="poin-keterangan">Keterangan Pelanggaran / Prestasi</label>
+                    <input type="text" id="poin-keterangan" class="input-kontrol" placeholder="Contoh: Terlambat jamaah subuh" required>
+                </div>
+                <div class="grup-form">
+                    <label for="poin-nilai">Besaran Poin</label>
+                    <input type="number" id="poin-nilai" class="input-kontrol" min="1" max="100" value="10" required>
+                    <small id="preview-dampak-poin" class="teks-info-form">Dampak: Skor santri akan berkurang 10 poin.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" data-tutup="modal-poin">Batal</button>
+                    <button type="submit" class="btn btn-utama">Simpan Catatan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notifikasi Melayang (Toast DOM) -->
+    <div id="toast-notifikasi" class="toast"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

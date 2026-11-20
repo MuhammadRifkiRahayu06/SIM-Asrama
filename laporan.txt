@@ -1,0 +1,180 @@
+================================================================================
+LAPORAN UJIAN TENGAH SEMESTER (UTS) - PEMROGRAMAN WEB
+================================================================================
+
+Nama Mahasiswa : Muhammad Rifki Rahayu
+NIM            : 2406057
+Kelas / Sem.   : B / Semester V
+Program Studi  : Teknik Informatika - Institut Teknologi Garut
+Mata Kuliah    : Pemrograman Web (IFRWP5151 / 3 SKS)
+Dosen Pengampu : Ade Sutedi, S.T., M.Kom.
+Nama Aplikasi  : SIM-ASRAMA (Sistem Informasi Manajemen Data, Perizinan & Poin Santri)
+
+================================================================================
+1. DESKRIPSI UMUM APLIKASI
+================================================================================
+SIM-ASRAMA adalah aplikasi berbasis web yang dirancang untuk membantu pengurus
+asrama atau pondok pesantren dalam mengelola data penghuni (santri), mencatat
+log perizinan keluar-masuk asrama, serta memantau poin kedisiplinan maupun
+prestasi santri secara terpusat.
+
+Aplikasi ini dibangun menggunakan HTML5, CSS3, dan JavaScript murni (Vanilla JS)
+tanpa menggunakan framework CSS/JS maupun template eksternal. Seluruh interaksi
+antarmuka dijalankan secara dinamis dalam satu halaman (Single Page Application)
+menggunakan manipulasi Document Object Model (DOM) tanpa perlu memuat ulang
+(reload) halaman browser.
+
+Fitur Utama Aplikasi:
+1. Dashboard Statistik Real-Time: Menampilkan jumlah total santri, jumlah santri
+   yang berada di asrama, jumlah santri yang sedang izin, dan jumlah santri
+   yang memerlukan pembinaan (poin < 75).
+2. Manajemen Data Santri (CRUD): Tambah data santri baru (dengan validasi NIS
+   unik), ubah profil santri, dan hapus data santri beserta data relasinya.
+3. Log Perizinan & Sinkronisasi Status Otomatis: Pencatatan izin keluar, izin
+   pulang, atau izin sakit yang secara otomatis mengubah status santri menjadi
+   "Sedang Izin", serta tombol konfirmasi kembali yang mengembalikan status
+   santri menjadi "Di Asrama".
+4. Catatan Poin Kedisiplinan & Prestasi: Pencatatan pelanggaran (pengurangan
+   poin) dan prestasi (penambahan poin) dengan pratinjau dampak skor secara
+   langsung dan kalkulasi ulang total poin santri secara otomatis.
+5. Pencarian Instan (Live Search) & Filter Multi-Kriteria: Penyaringan data
+   langsung saat pengguna mengetik kata kunci atau memilih filter kamar, status
+   keberadaan, status izin, dan kategori poin.
+6. Pengubah Tema Tampilan (Light Mode & Dark Mode) serta fitur Reset Database
+   ke data contoh awal.
+
+================================================================================
+2. SPESIFIKASI KEBUTUHAN & TOOLS PENDUKUNG
+================================================================================
+A. Perangkat Keras (Hardware):
+   - Laptop / PC dengan prosesor standar dan RAM minimal 4 GB.
+
+B. Perangkat Lunak (Software) & Tools:
+   - Sistem Operasi : Windows 11
+   - Code Editor    : Visual Studio Code (VS Code)
+   - Web Browser    : Google Chrome / Microsoft Edge (mendukung standar ES6 &
+                      Web Storage API)
+
+C. Teknologi Pemrograman yang Digunakan:
+   - HTML5           : Menyusun struktur semantik halaman, tabel data, navigasi
+                       tab, dan formulir modal.
+   - CSS3            : Mengatur tata letak responsif (CSS Grid & Flexbox),
+                       komponen antarmuka, badge status, dan variabel tema
+                       (CSS Custom Properties) untuk Mode Terang & Mode Gelap.
+   - JavaScript (ES6): Mengelola logika bisnis, relasi data, validasi input,
+                       event handling, dan manipulasi DOM.
+   - Web Storage API : Menggunakan localStorage browser sebagai basis data
+                       lokal persisten agar data tetap tersimpan meskipun
+                       halaman di-refresh atau browser ditutup.
+
+================================================================================
+3. STRUKTUR BASIS DATA & CARA KERJA SISTEM
+================================================================================
+A. Struktur Basis Data (localStorage - Kunci: "sim_asrama_db_v1"):
+   Data disimpan dalam format JSON yang terstruktur menyerupai 3 tabel
+   relasional yang saling terhubung melalui kunci relasi (id_santri):
+   1. Tabel "santri": Menyimpan id_santri, nis, nama, kamar, kelas, status
+      ("Di Asrama" atau "Sedang Izin"), dan poin (skor awal 100).
+   2. Tabel "perizinan": Menyimpan id_izin, id_santri (relasi ke santri),
+      jenis_izin, keperluan, tgl_izin, estimasi_kembali, dan status_izin
+      ("Aktif" atau "Kembali").
+   3. Tabel "riwayat_poin": Menyimpan id_poin, id_santri (relasi ke santri),
+      kategori ("Pelanggaran" atau "Prestasi"), keterangan, jumlah_poin, dan
+      tanggal.
+
+B. Alur Kerja Sistem (Workflow):
+   1. Inisialisasi: Saat index.html dibuka, fungsi muatDatabase() memeriksa
+      ketersediaan data di localStorage. Jika masih kosong, sistem otomatis
+      mengisi data contoh awal agar aplikasi langsung siap digunakan.
+   2. Relasi Perizinan: Ketika pengurus menyimpan izin baru melalui fungsi
+      prosesSimpanIzin(), sistem menambahkan catatan ke array perizinan dan
+      otomatis memperbarui properti status santri terkait menjadi "Sedang Izin".
+      Saat tombol "Kembali" ditekan (konfirmasiSantriKembali()), status izin
+      berubah menjadi "Kembali" dan status santri kembali ke "Di Asrama".
+   3. Relasi Poin: Ketika catatan poin disimpan (prosesSimpanPoin()), sistem
+      menghitung selisih poin (negatif untuk pelanggaran, positif untuk
+      prestasi) lalu memperbarui total poin santri terkait secara otomatis.
+      Jika riwayat poin dihapus, skor santri otomatis dikembalikan ke nilai
+      semula.
+   4. Penghapusan Berantai (Cascade Delete): Jika data seorang santri dihapus,
+      seluruh riwayat perizinan dan catatan poin milik santri tersebut ikut
+      dibersihkan agar tidak terjadi data yatim (orphan data).
+
+================================================================================
+4. KONSEP DOM (DOCUMENT OBJECT MODEL) & CARA KERJANYA DALAM APLIKASI
+================================================================================
+Seluruh interaktivitas pada SIM-ASRAMA bergantung pada manipulasi pohon DOM
+melalui file js/app.js dengan rincian teknik sebagai berikut:
+
+1. Seleksi Elemen DOM (DOM Selection):
+   - Menggunakan document.getElementById() untuk mengambil referensi elemen
+     spesifik seperti wadah tabel (tbody-santri, tbody-izin, tbody-poin),
+     angka kartu statistik (stat-total, stat-asrama, stat-izin, stat-pembinaan),
+     dan input pencarian.
+   - Menggunakan document.querySelectorAll() untuk menyeleksi sekumpulan elemen
+     sekaligus seperti tombol navigasi tab (.tab-btn), panel konten (.panel-tab),
+     dan elemen latar modal (.modal-latar).
+
+2. Pembuatan & Penyisipan Elemen Dinamis (Dynamic Element Creation):
+   - Di dalam fungsi renderTabelSantri(), renderTabelIzin(), dan
+     renderTabelPoin(), baris tabel (<tr>) dan tombol aksi (<button>) tidak
+     ditulis statis di HTML, melainkan dibangkitkan langsung oleh JavaScript
+     menggunakan document.createElement() dan disisipkan ke dalam <tbody>
+     menggunakan appendChild().
+   - Pada fungsi perbaruiDropdownKamar() dan perbaruiDropdownSantri(), elemen
+     <option> pada dropdown filter maupun formulir modal dibentuk secara
+     dinamis berdasarkan data santri terkini di database.
+
+3. Manipulasi Konten Teks & Indikator Kondisional:
+   - Menggunakan properti .textContent pada fungsi perbaruiStatistik() dan
+     perbaruiJamNavbar() untuk memperbarui angka statistik serta jam digital
+     setiap detik tanpa memengaruhi elemen HTML di sekitarnya.
+   - Penentuan warna badge poin pada tabel santri dilakukan secara kondisional
+     lewat DOM: skor >= 80 diberi kelas "badge-hijau", skor 50-79 diberi
+     "badge-kuning", dan skor < 50 diberi "badge-merah".
+
+4. Manipulasi Kelas CSS & Atribut (Class & Attribute Manipulation):
+   - Navigasi Tab Tanpa Reload: Menggunakan classList.remove("active") dan
+     classList.add("active") saat tombol tab diklik untuk menyembunyikan
+     panel lama dan menampilkan panel yang dipilih.
+   - Modal Popup & Notifikasi Toast: Menggunakan classList.add("show") dan
+     classList.remove("show") yang dipadukan dengan setTimeout() pada fungsi
+     tampilkanToast() untuk memunculkan notifikasi transaksi berhasil/gagal
+     selama 3 detik.
+   - Pengubah Tema (Dark Mode): Menggunakan document.documentElement.setAttribute
+     ("data-theme", tema) pada fungsi terapkanTema() untuk mengganti skema
+     variabel warna CSS di seluruh halaman secara instan.
+
+5. Penanganan Kejadian (Event Handling):
+   - Menggunakan addEventListener("DOMContentLoaded", ...) sebagai titik awal
+     eksekusi program setelah seluruh struktur HTML selesai dimuat.
+   - Menggunakan event "input" dan "change" pada kotak pencarian serta dropdown
+     filter untuk menjalankan penyaringan tabel secara real-time setiap kali
+     pengguna mengetik karakter.
+   - Menggunakan event "submit" disertai event.preventDefault() pada ketiga
+     formulir modal agar pengiriman data diproses oleh JavaScript dan disimpan
+     ke localStorage tanpa me-refresh halaman browser.
+
+================================================================================
+5. OUTPUT SISTEM / APLIKASI
+================================================================================
+Output yang dihasilkan oleh aplikasi SIM-ASRAMA terdiri dari:
+1. Header & Bar Informasi: Menampilkan judul sistem, penunjuk waktu digital
+   real-time (hari, tanggal, dan jam berjalan), tombol Reset Data, serta
+   tombol pengubah Mode Gelap / Mode Terang.
+2. Empat Kartu Ringkasan Statistik: Menampilkan rekapitulasi angka langsung
+   untuk Total Santri, Santri Di Asrama, Santri Sedang Izin, dan Santri Perlu
+   Pembinaan yang selalu sinkron dengan perubahan data.
+3. Tiga Panel Tabel Interaktif:
+   - Panel Data Santri: Menampilkan daftar santri lengkap dengan badge status
+     keberadaan, badge skor poin berwarna, pencarian instan, filter kamar,
+     filter status, serta tombol aksi Edit dan Hapus.
+   - Panel Log Perizinan: Menampilkan riwayat izin dengan urutan izin aktif
+     di posisi teratas, informasi waktu keluar dan estimasi kembali, serta
+     tombol konfirmasi "Kembali" dan "Hapus".
+   - Panel Catatan Poin: Menampilkan riwayat pelanggaran dan prestasi santri
+     beserta nilai perubahan poin (+/-) dan tombol Hapus.
+4. Formulir Modal Interaktif & Notifikasi Toast: Jendela pop-up bersih untuk
+   input/edit data disertai pratinjau dampak poin otomatis dan notifikasi
+   melayang setiap kali operasi simpan, ubah, atau hapus berhasil dijalankan.
+================================================================================
